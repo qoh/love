@@ -24,6 +24,8 @@
 
 #include <algorithm> // For min/max
 
+#include "libraries/tracy/Tracy.hpp"
+
 namespace love
 {
 namespace graphics
@@ -214,6 +216,7 @@ Canvas::~Canvas()
 
 bool Canvas::loadVolatile()
 {
+	ZoneScoped;
 	if (texture != 0)
 		return true;
 

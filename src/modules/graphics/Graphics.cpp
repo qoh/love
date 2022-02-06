@@ -33,6 +33,8 @@
 #include "Text.h"
 #include "common/deprecation.h"
 
+#include "libraries/tracy/Tracy.hpp"
+
 // C++
 #include <algorithm>
 #include <stdlib.h>
@@ -1114,6 +1116,7 @@ Graphics::StreamVertexData Graphics::requestStreamDraw(const StreamDrawCommand &
 
 void Graphics::flushStreamDraws()
 {
+	ZoneScoped;
 	using namespace vertex;
 
 	auto &sbstate = streamBufferState;

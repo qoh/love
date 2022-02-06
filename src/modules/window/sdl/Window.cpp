@@ -31,6 +31,8 @@
 #include "common/ios.h"
 #endif
 
+#include "libraries/tracy/Tracy.hpp"
+
 // C++
 #include <iostream>
 #include <vector>
@@ -1015,6 +1017,7 @@ bool Window::isMinimized() const
 
 void Window::swapBuffers()
 {
+	ZoneScoped;
 	SDL_GL_SwapWindow(window);
 }
 

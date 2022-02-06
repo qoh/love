@@ -1680,6 +1680,14 @@ set(LOVE_SRC_3P_XXHASH
 
 add_library(love_3p_xxhash ${LOVE_SRC_3P_XXHASH})
 
+#
+# Tracy
+#
+
+set(TRACY_ON_DEMAND ON)
+add_definitions(-DTRACY_ON_DEMAND)
+add_subdirectory(src/libraries/tracy)
+
 set(LOVE_3P
 	love_3p_box2d
 	love_3p_ddsparse
@@ -1694,6 +1702,7 @@ set(LOVE_3P
 	love_3p_physfs
 	love_3p_wuff
 	love_3p_xxhash
+	TracyClient
 )
 
 love_disable_warnings(love_3p_box2d love_3p_enet love_3p_luasocket love_3p_physfs)

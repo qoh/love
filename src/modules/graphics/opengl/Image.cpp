@@ -26,6 +26,8 @@
 // STD
 #include <algorithm> // for min/max
 
+#include "libraries/tracy/Tracy.hpp"
+
 namespace love
 {
 namespace graphics
@@ -149,6 +151,7 @@ void Image::loadData()
 
 void Image::uploadByteData(PixelFormat pixelformat, const void *data, size_t size, int level, int slice, const Rect &r)
 {
+	ZoneScoped;
 	OpenGL::TempDebugGroup debuggroup("Image data upload");
 
 	gl.bindTextureToUnit(this, 0, false);
@@ -180,6 +183,7 @@ void Image::uploadByteData(PixelFormat pixelformat, const void *data, size_t siz
 
 bool Image::loadVolatile()
 {
+	ZoneScoped;
 	if (texture != 0)
 		return true;
 

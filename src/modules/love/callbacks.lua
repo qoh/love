@@ -143,34 +143,55 @@ function love.run()
 	-- Main loop time.
 	return function()
 		-- Process events.
+		tracy.ZoneBeginN("Events")
 		if love.event then
 			love.event.pump()
 			for name, a,b,c,d,e,f in love.event.poll() do
 				if name == "quit" then
 					if not love.quit or not love.quit() then
+						tracy.ZoneEnd()
 						return a or 0
 					end
 				end
 				love.handlers[name](a,b,c,d,e,f)
 			end
 		end
+		tracy.ZoneEnd()
 
+		tracy.ZoneBeginN("Update")
 		-- Update dt, as we'll be passing it to update
 		if love.timer then dt = love.timer.step() end
 
 		-- Call update and draw
-		if love.update then love.update(dt) end -- will pass 0 if love.timer is disabled
+		if love.update then
+			tracy.ZoneBeginN("love.update")
+			love.update(dt) -- will pass 0 if love.timer is disabled
+			tracy.ZoneEnd()
+		end
+		tracy.ZoneEnd()
 
+		tracy.ZoneBeginN("Draw")
 		if love.graphics and love.graphics.isActive() then
+			tracy.ZoneBeginN("Reset transform")
 			love.graphics.origin()
+			tracy.ZoneEnd()
+			tracy.ZoneBeginN("Clear (background color)")
 			love.graphics.clear(love.graphics.getBackgroundColor())
+			tracy.ZoneEnd()
 
-			if love.draw then love.draw() end
+			if love.draw then
+				tracy.ZoneBeginN("love.draw")
+				love.draw()
+				tracy.ZoneEnd()
+			end
 
 			love.graphics.present()
 		end
+		tracy.ZoneEnd()
 
-		if love.timer then love.timer.sleep(0.001) end
+		tracy.ZoneBeginN("Sleep")
+		if love.timer and dt < 0.001 then love.timer.sleep(0.001) end
+		tracy.ZoneEnd()
 	end
 
 end

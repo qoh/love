@@ -367,9 +367,14 @@ return function()
 	func = earlyinit
 
 	while func do
+		tracy.ZoneBeginN("Lua main iter")
 		local _, retval = xpcall(func, deferErrhand)
-		if retval then return retval end
+		if retval then
+			tracy.ZoneEnd()
+			return retval
+		end
 		coroutine.yield()
+		tracy.ZoneEnd()
 	end
 
 	return 1

@@ -33,6 +33,10 @@
 
 #include "libraries/xxHash/xxhash.h"
 
+#include "libraries/tracy/Tracy.hpp"
+using namespace glad;
+#include "libraries/tracy/TracyOpenGL.hpp"
+
 // C++
 #include <vector>
 #include <sstream>
@@ -308,6 +312,7 @@ void Graphics::setActive(bool enable)
 
 void Graphics::draw(const DrawCommand &cmd)
 {
+	TracyGpuZone("Draw");
 	gl.prepareDraw();
 	gl.setVertexAttributes(*cmd.attributes, *cmd.buffers);
 	gl.bindTextureToUnit(cmd.texture, 0, false);
@@ -325,6 +330,7 @@ void Graphics::draw(const DrawCommand &cmd)
 
 void Graphics::draw(const DrawIndexedCommand &cmd)
 {
+	TracyGpuZone("DrawIndexed");
 	gl.prepareDraw();
 	gl.setVertexAttributes(*cmd.attributes, *cmd.buffers);
 	gl.bindTextureToUnit(cmd.texture, 0, false);
@@ -369,6 +375,7 @@ static inline void advanceVertexOffsets(const vertex::Attributes &attributes, ve
 
 void Graphics::drawQuads(int start, int count, const vertex::Attributes &attributes, const vertex::BufferBindings &buffers, love::graphics::Texture *texture)
 {
+	TracyGpuZone("DrawQuads");
 	const int MAX_VERTICES_PER_DRAW = LOVE_UINT16_MAX;
 	const int MAX_QUADS_PER_DRAW    = MAX_VERTICES_PER_DRAW / 4;
 
@@ -476,6 +483,8 @@ void Graphics::setDebug(bool enable)
 
 void Graphics::setCanvasInternal(const RenderTargets &rts, int w, int h, int pixelw, int pixelh, bool hasSRGBcanvas)
 {
+	ZoneScoped;
+	TracyGpuZone("SetCanvas");
 	const DisplayState &state = states.back();
 
 	OpenGL::TempDebugGroup debuggroup("setCanvas");
@@ -524,6 +533,8 @@ void Graphics::setCanvasInternal(const RenderTargets &rts, int w, int h, int pix
 
 void Graphics::endPass()
 {
+	TracyGpuZone("EndPass");
+
 	auto &rts = states.back().renderTargets;
 	love::graphics::Canvas *depthstencil = rts.depthStencil.canvas.get();
 
@@ -591,6 +602,9 @@ void Graphics::endPass()
 
 void Graphics::clear(OptionalColorf c, OptionalInt stencil, OptionalDouble depth)
 {
+	ZoneScoped;
+	TracyGpuZone("Clear");
+
 	if (c.hasValue || stencil.hasValue || depth.hasValue)
 		flushStreamDraws();
 
@@ -621,7 +635,10 @@ void Graphics::clear(OptionalColorf c, OptionalInt stencil, OptionalDouble depth
 	}
 
 	if (flags != 0)
+	{
+		TracyGpuZone("glClear");
 		glClear(flags);
+	}
 
 	if (depth.hasValue && !hadDepthWrites)
 		gl.setDepthWrites(hadDepthWrites);
@@ -637,6 +654,9 @@ void Graphics::clear(OptionalColorf c, OptionalInt stencil, OptionalDouble depth
 
 void Graphics::clear(const std::vector<OptionalColorf> &colors, OptionalInt stencil, OptionalDouble depth)
 {
+	ZoneScoped;
+	TracyGpuZone("Clear");
+
 	if (colors.size() == 0 && !stencil.hasValue && !depth.hasValue)
 		return;
 
@@ -895,6 +915,9 @@ void Graphics::bindCachedFBO(const RenderTargets &targets)
 
 void Graphics::present(void *screenshotCallbackData)
 {
+	ZoneScoped;
+	TracyGpuZone("Present");
+
 	if (!isActive())
 		return;
 
@@ -1012,7 +1035,20 @@ void Graphics::present(void *screenshotCallbackData)
 
 	auto window = getInstance<love::window::Window>(M_WINDOW);
 	if (window != nullptr)
+	{
+		TracyGpuZone("SwapBuffers");
 		window->swapBuffers();
+	}
+
+	TracyPlot("Draw calls", (int64_t)drawCalls);
+	TracyPlot("Draw calls (batched)", (int64_t)drawCallsBatched);
+	TracyPlot("Canvas switches", (int64_t)canvasSwitchCount);
+	TracyPlot("Shader switches", (int64_t)gl.stats.shaderSwitches);
+	TracyPlot("Canvases", (int64_t)Canvas::canvasCount);
+	TracyPlot("Images", (int64_t)Image::imageCount);
+	TracyPlot("Fonts", (int64_t)Font::fontCount);
+	TracyPlot("Texture memory", (int64_t)Texture::totalGraphicsMemory);
+	TracyGpuCollect;
 
 	// Reset the per-frame stat counts.
 	drawCalls = 0;

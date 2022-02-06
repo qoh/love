@@ -24,6 +24,8 @@
 #include "Shader.h"
 #include "Graphics.h"
 
+#include "libraries/tracy/Tracy.hpp"
+
 // C++
 #include <algorithm>
 #include <limits>
@@ -295,6 +297,7 @@ void Shader::mapActiveUniforms()
 
 bool Shader::loadVolatile()
 {
+	ZoneScoped;
 	OpenGL::TempDebugGroup debuggroup("Shader load");
 
     // Recreating the shader program will invalidate uniforms that rely on these.

@@ -48,6 +48,10 @@
 #include <dlfcn.h>
 #endif
 
+// Tracy
+using namespace glad;
+#include "libraries/tracy/TracyOpenGL.hpp"
+
 namespace love
 {
 namespace graphics
@@ -199,6 +203,8 @@ void OpenGL::setupContext()
 {
 	if (!contextInitialized)
 		return;
+
+	TracyGpuContext;
 
 	initMaxValues();
 

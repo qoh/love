@@ -22,6 +22,8 @@
 #include "common/runtime.h"
 #include "modules/love/love.h"
 #include <SDL.h>
+#include "libraries/tracy/Tracy.hpp"
+#include "libraries/tracy/TracyLua.hpp"
 
 #ifdef LOVE_BUILD_EXE
 
@@ -177,6 +179,9 @@ static DoneAction runlove(int argc, char **argv, int &retval)
 	// Add love to package.preload for easy requiring.
 	love_preload(L, luaopen_love, "love");
 
+	// Add Tracy profiling client.
+	tracy::LuaRegister(L);
+
 	// Add command line arguments to global arg (like stand-alone Lua).
 	{
 		lua_newtable(L);
@@ -226,11 +231,14 @@ static DoneAction runlove(int argc, char **argv, int &retval)
 	int stackpos = lua_gettop(L);
 	int nres;
 	while (love::luax_resume(L, 0, &nres) == LUA_YIELD)
+	{
 #if LUA_VERSION_NUM >= 504
 		lua_pop(L, nres);
 #else
 		lua_pop(L, lua_gettop(L) - stackpos);
 #endif
+		FrameMark;
+	}
 
 	retval = 0;
 	DoneAction done = DONE_QUIT;
